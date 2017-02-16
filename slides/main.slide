@@ -1,0 +1,115 @@
+Google Container Engine
+GKE
+16 Feb 2017
+Tags: GKE, Container Engine, Docker
+
+Tony Truong
+Software Engineer, DiUS Computing
+ttruong@dius.com.au
+@tonykqt
+
+* Installing Kubernetes CLI
+
+  gcloud components install kubectl
+
+Sign up for Google Free Trial. It gives $300 for 60 days. Will confirm before actually billing you so your card won't automatically get charged.
+
+Setup Kubernetes (K8s) Config:
+
+  cd ~
+  mkdir .kube
+  echo "" > .kube/config
+
+Put *KUBECONFIG* in the environment variables and point to that config file.
+On Windows it should be: 
+
+  %USERPROFILE%\.kube\config
+
+Put *HOME* in the environment variables
+
+  %USERPROFILE%
+
+* Initialize the SDK
+We can initialize the SDK and login with the following lines:
+
+  gcloud init
+  gcloud auth application-default login
+
+This opens up a browser and signs you in. We can call auth again whenever we need to.
+
+To work in an automated fashion we can get the credentials and put them into a JSON file.
+
+[[https://developers.google.com/identity/protocols/application-default-credentials][GCP Application Default Credentials]]
+
+: Service Account is what we would use for automated tools. e.g. Travis-ci CLI tools can encrypt and decrypt the JSON file
+
+* Projects
+
+Projects are the high level abstraction on GCP. A Project has all the GCP services in it and is a logical abstraction. This makes it quite nice for billing.
+
+Set the project and get a list of projects with:
+  
+  gcloud config set project <PROJECT NAME>
+  gcloud projects list
+
+* The Web Application
+
+* Simple Web Application in Go
+
+.play ../main.go
+
+* Build a Docker image
+
+First build the binary for linux ... on Windows!
+
+  CGO_ENABLED=0 GOOS=linux go build -a --ldflags="-s" --installsuffix cgo -o webapp
+  docker build -t gke-webapp:v1 .
+
+Now we need to tag it with the GCP project id in the path.
+
+  docker tag user/example-image gcr.io/your-project-id/example-image
+
+Example:
+
+  docker tag gke-webapp:v1 asia.gcr.io/dius-158701/gke-webapp:v1
+
+* Google Container Registry
+
+GCR uses Google Cloud Storage bucket in the backend. This is akin to AWS S3. Owners of the project can push and pull images from the bucket that contains the images.
+
+From Google's Documentation:
+
+- *us.gcr.io* hosts your images in the United States.
+- *eu.gcr.io* hosts your images in the European Union.
+- *asia.gcr.io* hosts your images in Asia.
+- *gcr.io* and us.gcr.io are not interchangeable in your commands.
+
+* Push Container to GCR
+  
+  gcloud docker -- push gcr.io/your-project-id/example-image
+
+Example:
+
+  gcloud docker -- push asia.gcr.io/dius-158701/gke-webapp:v1
+
+.image ./images/gke-webapp-container-registry-view.PNG
+
+* GCR Bucket view
+
+.image ./images/gke-webapp-container-on-gcp.PNG
+
+Should only use this bucket for containers for this project.
+
+* GKE Clusters
+
+* Kubernetes
+
+GKE Runs Kubernetes (K8s).
+
+- *Nodes* are the actual virtual machines where the containers will run
+- *Pods* are the smallest unit and can contain 1 or more containers
+- *Replication* *Controllers* manage autoscaling of pods. Automatically adds pods or removes pods based on number of desired pods and if any fail.
+- *Services* are a logical set of pods and a policy. It is a microservice. Services expose the pods and can act as a load balancer to the pods.
+- *Deployments* are a higher level abstraction than _replication_ _clusters_. Provides declarative updates for Pods and Replica sets in YAML. Currently in _beta_.
+
+:  A differentiating factor is that K8s has built in service discovery. So you don't have to worry about port management at the node level.

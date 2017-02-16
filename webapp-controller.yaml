@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: webapp-frontend
+spec:
+  replicas: 2
+  
+  template:
+    metadata:
+      labels:
+        name: webapp
+        tier: frontend
+    spec:
+      containers:
+      - name: webapp
+        image: asia.gcr.io/dius-158701/gke-webapp:v1
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 80
