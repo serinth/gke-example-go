@@ -113,3 +113,185 @@ GKE Runs Kubernetes (K8s).
 - *Deployments* are a higher level abstraction than _replication_ _clusters_. Provides declarative updates for Pods and Replica sets in YAML. Currently in _beta_.
 
 :  A differentiating factor is that K8s has built in service discovery. So you don't have to worry about port management at the node level.
+
+* Setup The Cluster
+
+  gcloud config set container/cluster <NAME>
+
+When we build the cluster we need to set the default region and zones. Regions are large geographical areas and zones are akin to availability zones. This determines where our cluster will live by default when VMs are spun up.
+
+To get a list of regions and zones we need to have the project configured correctly and then run:
+
+  gcloud compute regions list
+  gcloud compute zones list
+
+* GCP Compute Regions
+
+  C:\Path\Cloud SDK>gcloud compute regions list
+  NAME             CPUS  DISKS_GB  ADDRESSES  RESERVED_ADDRESSES  STATUS  TURNDOWN_DATE
+  asia-east1       0/8   0/2048    0/23       0/1                 UP
+  asia-northeast1  0/8   0/2048    0/23       0/1                 UP
+  europe-west1     0/8   0/2048    0/23       0/1                 UP
+  us-central1      0/8   0/2048    0/23       0/1                 UP
+  us-east1         0/8   0/2048    0/23       0/1                 UP
+  us-west1         0/8   0/2048    0/23       0/1                 UP
+
+* GCP Compute zones
+
+  C:\Path\Cloud SDK>gcloud compute zones list
+  NAME               REGION           STATUS  NEXT_MAINTENANCE  TURNDOWN_DATE
+  asia-east1-a       asia-east1       UP
+  asia-east1-b       asia-east1       UP
+  asia-east1-c       asia-east1       UP
+  asia-northeast1-a  asia-northeast1  UP
+  asia-northeast1-c  asia-northeast1  UP
+  asia-northeast1-b  asia-northeast1  UP
+  europe-west1-c     europe-west1     UP
+  europe-west1-b     europe-west1     UP
+  europe-west1-d     europe-west1     UP
+  us-central1-c      us-central1      UP
+  us-central1-f      us-central1      UP
+  us-central1-b      us-central1      UP
+  us-central1-a      us-central1      UP
+  us-east1-d         us-east1         UP
+  us-east1-c         us-east1         UP
+  us-east1-b         us-east1         UP
+  us-west1-a         us-west1         UP
+  us-west1-b         us-west1         UP
+
+* Selecting Regions and Zones
+
+Then set the region to be Japan with:
+
+  gcloud config set compute/region asia-northeast1
+  gcloud config set compcute/zone asia-northeast1-a
+
+Our config should now look something like this:
+  
+  C:\Path\Cloud SDK>gcloud config list
+
+  [compute]
+  region = asia-northeast1
+  zone = asia-northeast1-a
+
+  [container]
+  cluster = dius-cluster
+  
+  [core]
+  account = serinth@gmail.com
+  disable_usage_reporting = False
+  project = dius-158701
+
+* Create The Cluster
+These are the default networks by region:
+.image ./images/gcp-default-networks-by-region.PNG
+
+The default machine type is *n1-standard-1*.
+You can get network specific and even have the pool auto-scale.
+
+Clusters can be made to auto-scale at a later date and also be multi-zone at a later date by updating the config.
+
+* Create The Cluster cont.
+
+  gcloud container clusters create dius-cluster --zone asia-northeast1-a --num-nodes 2 
+
+This can take a few minutes.
+
+Set Kubernetes configuration credentials with:
+
+  gcloud container clusters get-credentials dius-cluster
+
+This only has to be run once per machine. The credentials are stored into *~/.kube/config*
+
+: kubectl can switch clusters and credentials accordingly
+: kubectl proxy --www=. to run the Kubernetes UI
+
+* Deploying the Web Application
+
+* Show containers
+
+To see what containers we have via the CLI we need to install the SDK Alpha version
+
+  gcloud alpha container images list --repository=asia.gcr.io/dius-158701
+
+* Create a Kubernetes Deployment of webapp
+
+To deploy a single container in the pool with the default options we can run:
+  
+  kubectl run webapp --image=asia.gcr.io/dius-158701/gke-webapp:v1 -l run=webapp,name=webapp
+
+To specify replication and have more control without specifying a long command we can use a yaml file:
+
+  kubectl create -f webapp-controller.yaml
+
+Now we can see what containers/pods are running and our replication controller which allows us to scale up and down:
+
+  C:\Path>kubectl get pod
+  NAME                    READY     STATUS    RESTARTS   AGE
+  webapp-frontend-qgc4g   1/1       Running   0          18s
+  webapp-frontend-tgbjb   1/1       Running   0          18s
+
+  C:\Path>kubectl get rc
+  NAME              DESIRED   CURRENT   READY     AGE
+  webapp-frontend   2         2         2         25s
+
+* Replication Controller YAML
+
+.code ../webapp-controller.yaml
+
+: Labels are important as that is how service discovery works when exposed
+
+* Visualize with a Z
+
+  kubectl apply -f https://cloud.weave.works/launch/k8s/weavescope.yaml 
+
+Forward the port to our local machine so we can see whats happening. First we need to get the pod name for weave scope and then use that to port Forward
+
+  kubectl port-forward $(kubectl get pod --selector=weave-scope-component=app -o jsonpath='{.items..metadata.name}') 
+
+: Weave Scope is open source to help visualize and debug clusters
+
+* Weave Scope Node View
+
+.image ./images/weavescope-node-view.PNG _ 1000
+
+* Weave Scope Webapp View
+
+.image ./images/weavescope-visualize-webapp.PNG _ 1000
+
+* Expose Webapp as a Service
+
+Specify the YAML file
+
+  kubectl create -f webapp-service.yaml
+
+To get the service Ingress endpoint we can describe the service.
+This make take a few seconds.
+
+  kubectl describe services webapp
+
+TODO: Show output
+
+* Getting the Results
+
+.play ../watcher/watcher.go
+
+* Scaling Out
+
+Increase the number of replicas and then run:
+
+  kubectl apply -f webapp-controller.yaml
+  kubectl get rc
+  kubectl get pod
+
+TODO: SHOW OUTPUT
+
+* Logging
+
+TODO: How Logging Works
+
+* Cleaning Up
+
+  kubectl delete services <service name>
+  kubectl delete rc <controllerName>
+  gcloud containers cluster delete dius-cluster
