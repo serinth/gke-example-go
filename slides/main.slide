@@ -243,7 +243,7 @@ Now we can see what containers/pods are running and our replication controller w
 
 * Visualize with a Z
 
-  kubectl apply -f https://cloud.weave.works/launch/k8s/weavescope.yaml 
+  kubectl apply -f weavescope.yaml 
 
 Forward the port to our local machine so we can see whats happening. First we need to get the pod name for weave scope and then use that to port Forward
 
@@ -288,7 +288,19 @@ TODO: SHOW OUTPUT
 
 * Logging
 
-TODO: How Logging Works
+* Kubernetes Logging
+
+*logrotate* is used for log rotation and is performed daily, or if the file gets larger than 10MB.
+
+A rotation belongs to a single container. If the pod is evicted or repeatedly fails, all previous rotations are lost.
+
+Containers have up to 5 rotations by default.
+
+All *stdout* and *stderr* is directed to the Kubernetes logging driver so that we can use the following command:
+
+  kubectl logs <pod name>
+
+* GCP Stackdriver Logging
 
 * Cleaning Up
 
