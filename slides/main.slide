@@ -274,7 +274,7 @@ TODO: Show output
 
 * Getting the Results
 
-.play ../watcher/watcher.go
+.play ../watcher/watcher.go /^func main/,/^}/
 
 * Scaling Out
 
