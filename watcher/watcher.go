@@ -17,5 +17,4 @@ func main() {
 		fmt.Println(string(data))
 		time.Sleep(2 * time.Second)
 	}
-
 }

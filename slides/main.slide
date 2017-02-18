@@ -92,11 +92,11 @@ Example:
 
   gcloud docker -- push asia.gcr.io/dius-158701/gke-webapp:v1
 
-.image ./images/gke-webapp-container-registry-view.PNG
+.image ./images/gke-webapp-container-registry-view.png
 
 * GCR Bucket view
 
-.image ./images/gke-webapp-container-on-gcp.PNG
+.image ./images/gke-webapp-container-on-gcp.png
 
 Should only use this bucket for containers for this project.
 
@@ -164,7 +164,7 @@ To get a list of regions and zones we need to have the project configured correc
 Then set the region to be Japan with:
 
   gcloud config set compute/region asia-northeast1
-  gcloud config set compcute/zone asia-northeast1-a
+  gcloud config set compute/zone asia-northeast1-a
 
 Our config should now look something like this:
   
@@ -184,7 +184,7 @@ Our config should now look something like this:
 
 * Create The Cluster
 These are the default networks by region:
-.image ./images/gcp-default-networks-by-region.PNG
+.image ./images/gcp-default-networks-by-region.png
 
 The default machine type is *n1-standard-1*.
 You can get network specific and even have the pool auto-scale.
@@ -253,11 +253,11 @@ Forward the port to our local machine so we can see whats happening. First we ne
 
 * Weave Scope Node View
 
-.image ./images/weavescope-node-view.PNG _ 1000
+.image ./images/weavescope-node-view.png _ 1000
 
 * Weave Scope Webapp View
 
-.image ./images/weavescope-visualize-webapp.PNG _ 1000
+.image ./images/weavescope-visualize-webapp.png _ 1000
 
 * Expose Webapp as a Service
 
@@ -268,9 +268,19 @@ Specify the YAML file
 To get the service Ingress endpoint we can describe the service.
 This make take a few seconds.
 
-  kubectl describe services webapp
-
-TODO: Show output
+  C:\Path>kubectl describe services webapp
+  Name:                   webapp
+  Namespace:              default
+  Labels:                 app=webapp
+                          role=service
+                          tier=frontend
+  Selector:               name=webapp,tier=frontend
+  Type:                   LoadBalancer
+  IP:                     10.119.252.79
+  LoadBalancer Ingress:   104.198.90.225
+  Port:                   <unset> 80/TCP
+  NodePort:               <unset> 31197/TCP
+  Endpoints:              10.116.1.4:80,10.116.1.5:80
 
 * Getting the Results
 
@@ -278,13 +288,56 @@ TODO: Show output
 
 * Scaling Out
 
-Increase the number of replicas and then run:
+Increase the number of replicas in *webapp-controller.yaml* and then run:
 
-  kubectl apply -f webapp-controller.yaml
-  kubectl get rc
-  kubectl get pod
+  C:\Path>kubectl apply -f webapp-controller.yaml
+  replicationcontroller "webapp-frontend" configured
 
-TODO: SHOW OUTPUT
+  C:\Path>kubectl get rc
+  NAME              DESIRED   CURRENT   READY     AGE
+  webapp-frontend   3         3         3         11m
+
+  C:\Path>kubectl get pods
+  NAME                               READY     STATUS    RESTARTS   AGE
+  weave-scope-agent-hpdk3            1/1       Running   0          9m
+  weave-scope-agent-xlx53            1/1       Running   0          9m
+  weave-scope-app-1387651679-f1bqp   1/1       Running   0          9m
+  webapp-frontend-4vbt5              1/1       Running   0          10m
+  webapp-frontend-czzbk              1/1       Running   0          10m
+  webapp-frontend-hc1b5              1/1       Running   0          9s
+
+* Rolling Updates
+
+Rolling updates are done in a Blue/Green fashion so that there is *no downtime*.
+New containers are provisioned and then each pod is slowly swapped out.
+
+  C:\Path>kubectl rolling-update webapp-frontend --image-pull-policy=Always --image=asia.gcr.io/dius-158701/gke-webapp:v2
+
+.image ./images/new-frontend-provisioned-green-blue-deployment.png
+
+* Rolling Updates cont.
+
+Output of the CLI while updates are being performed:
+
+  Created webapp-frontend-556affeefcf493b804296645914f6141
+  Scaling up webapp-frontend-556affeefcf493b804296645914f6141 from 0 to 3, scaling down webapp-frontend from 3 to 0 (keep 3 pods available, don't exceed 4 pods)
+  Scaling webapp-frontend-556affeefcf493b804296645914f6141 up to 1
+  Scaling webapp-frontend down to 2
+  Scaling webapp-frontend-556affeefcf493b804296645914f6141 up to 2
+  Scaling webapp-frontend down to 1
+  Scaling webapp-frontend-556affeefcf493b804296645914f6141 up to 3
+  Scaling webapp-frontend down to 0
+  Update succeeded. Deleting old controller: webapp-frontend
+  Renaming webapp-frontend to webapp-frontend-556affeefcf493b804296645914f6141
+  replicationcontroller "webapp-frontend" rolling updated
+
+* Rolling Updates Results
+
+.image ./images/version-switched-green-blue-deployment.png
+
+If there are problems we can always roll back with:
+
+  kubectl rolling-update webapp-frontend --rollback
 
 * Logging
 
@@ -302,8 +355,10 @@ All *stdout* and *stderr* is directed to the Kubernetes logging driver so that w
 
 * GCP Stackdriver Logging
 
+.image ./images/stackdriver-logs-webapp.png _ 1000
+
 * Cleaning Up
 
   kubectl delete services <service name>
   kubectl delete rc <controllerName>
-  gcloud containers cluster delete dius-cluster
+  gcloud container clusters delete dius-cluster
