@@ -43,6 +43,18 @@ To work in an automated fashion we can get the credentials and put them into a J
 
 : Service Account is what we would use for automated tools. e.g. Travis-ci CLI tools can encrypt and decrypt the JSON file
 
+* Service Accounts IAM
+
+.image ./images/service-account.png
+
+* Service Accounts JSON Keyfile
+
+.image ./images/service-account-json-key.png
+
+  gcloud auth activate-service-account <svc account email> --key-file=service-key.json
+
+: gcloud auth activate-service-account cluster-admin@dius-158701.iam.gserviceaccount.com --key-file=dius-9593028deb83.json
+
 * Projects
 
 Projects are the high level abstraction on GCP. A Project has all the GCP services in it and is a logical abstraction. This makes it quite nice for billing.
