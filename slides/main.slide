@@ -122,7 +122,7 @@ GKE Runs Kubernetes (K8s).
 - *Pods* are the smallest unit and can contain 1 or more containers
 - *Replication* *Controllers* manage autoscaling of pods. Automatically adds pods or removes pods based on number of desired pods and if any fail.
 - *Services* are a logical set of pods and a policy. It is a microservice. Services expose the pods and can act as a load balancer to the pods.
-- *Deployments* are a higher level abstraction than _replication_ _clusters_. Provides declarative updates for Pods and Replica sets in YAML. Currently in _beta_.
+- *Deployments* are a higher level abstraction than _replication_ _controllers_. Provides declarative updates for Pods and Replica sets in YAML.
 
 :  A differentiating factor is that K8s has built in service discovery. So you don't have to worry about port management at the node level.
 
@@ -232,24 +232,24 @@ To deploy a single container in the pool with the default options we can run:
   
   kubectl run webapp --image=asia.gcr.io/dius-158701/gke-webapp:v1 -l run=webapp,name=webapp
 
-To specify replication and have more control without specifying a long command we can use a yaml file:
+To use a deployment yaml file we can do:
 
-  kubectl create -f webapp-controller.yaml
+  kubectl create -f webapp-deployment.yaml
 
 Now we can see what containers/pods are running and our replication controller which allows us to scale up and down:
 
   C:\Path>kubectl get pod
   NAME                    READY     STATUS    RESTARTS   AGE
-  webapp-frontend-qgc4g   1/1       Running   0          18s
-  webapp-frontend-tgbjb   1/1       Running   0          18s
+  webapp-qgc4g             1/1       Running   0          18s
+  webapp-tgbjb             1/1       Running   0          18s
 
-  C:\Path>kubectl get rc
-  NAME              DESIRED   CURRENT   READY     AGE
-  webapp-frontend   2         2         2         25s
+  C:\Path>kubectl get deployment
+  NAME                DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+  webapp-deployment   2         2         2            2           9m
 
-* Replication Controller YAML
+* Deployment YAML
 
-.code ../webapp-controller.yaml
+.code ../webapp-deployment.yaml
 
 : Labels are important as that is how service discovery works when exposed
 
@@ -285,8 +285,8 @@ This make take a few seconds.
   Namespace:              default
   Labels:                 app=webapp
                           role=service
-                          tier=frontend
-  Selector:               name=webapp,tier=frontend
+                          tier=backend
+  Selector:               environment=dev,name=webapp
   Type:                   LoadBalancer
   IP:                     10.119.252.79
   LoadBalancer Ingress:   104.198.90.225
@@ -300,56 +300,39 @@ This make take a few seconds.
 
 * Scaling Out
 
-Increase the number of replicas in *webapp-controller.yaml* and then run:
+Increase the number of replicas in *webapp-deployment.yaml* and then run:
 
-  C:\Path>kubectl apply -f webapp-controller.yaml
-  replicationcontroller "webapp-frontend" configured
-
-  C:\Path>kubectl get rc
+  C:\Path>kubectl apply -f webapp-deployment.yaml
+  deployment "webapp-deployment" configured
+  
+  C:\Path>kubectl get deployments
   NAME              DESIRED   CURRENT   READY     AGE
-  webapp-frontend   3         3         3         11m
+  webapp             3         3         3         11m
 
   C:\Path>kubectl get pods
   NAME                               READY     STATUS    RESTARTS   AGE
   weave-scope-agent-hpdk3            1/1       Running   0          9m
   weave-scope-agent-xlx53            1/1       Running   0          9m
   weave-scope-app-1387651679-f1bqp   1/1       Running   0          9m
-  webapp-frontend-4vbt5              1/1       Running   0          10m
-  webapp-frontend-czzbk              1/1       Running   0          10m
-  webapp-frontend-hc1b5              1/1       Running   0          9s
+  webapp-deployment-4vbt5            1/1       Running   0          10m
+  webapp-deployment-czzbk            1/1       Running   0          10m
+  webapp-deployment-hc1b5            1/1       Running   0          9s
 
 * Rolling Updates
 
-Rolling updates are done in a Blue/Green fashion so that there is *no downtime*.
+Rolling updates are done in a Blue/Green fashion so that there is *no* *downtime*.
 New containers are provisioned and then each pod is slowly swapped out.
 
-  C:\Path>kubectl rolling-update webapp-frontend --image-pull-policy=Always --image=asia.gcr.io/dius-158701/gke-webapp:v2
+  C:\Path>kubectl apply -f webapp-deployment.yaml
 
-.image ./images/new-frontend-provisioned-green-blue-deployment.png
-
-* Rolling Updates cont.
-
-Output of the CLI while updates are being performed:
-
-  Created webapp-frontend-556affeefcf493b804296645914f6141
-  Scaling up webapp-frontend-556affeefcf493b804296645914f6141 from 0 to 3, scaling down webapp-frontend from 3 to 0 (keep 3 pods available, don't exceed 4 pods)
-  Scaling webapp-frontend-556affeefcf493b804296645914f6141 up to 1
-  Scaling webapp-frontend down to 2
-  Scaling webapp-frontend-556affeefcf493b804296645914f6141 up to 2
-  Scaling webapp-frontend down to 1
-  Scaling webapp-frontend-556affeefcf493b804296645914f6141 up to 3
-  Scaling webapp-frontend down to 0
-  Update succeeded. Deleting old controller: webapp-frontend
-  Renaming webapp-frontend to webapp-frontend-556affeefcf493b804296645914f6141
-  replicationcontroller "webapp-frontend" rolling updated
+.image ./images/new-backend-provisioned-green-blue-deployment.png
 
 * Rolling Updates Results
 
 .image ./images/version-switched-green-blue-deployment.png
 
-If there are problems we can always roll back with:
-
-  kubectl rolling-update webapp-frontend --rollback
+: Rollback history can be checked with kubectl describe deployments
+: Old way of rolling back = kubectl rolling-update webapp-frontend --rollback
 
 * Logging
 
@@ -372,5 +355,5 @@ All *stdout* and *stderr* is directed to the Kubernetes logging driver so that w
 * Cleaning Up
 
   kubectl delete services <service name>
-  kubectl delete rc <controllerName>
+  kubectl delete deployment <deployment name>
   gcloud container clusters delete dius-cluster

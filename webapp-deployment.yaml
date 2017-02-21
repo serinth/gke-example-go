@@ -3,14 +3,15 @@ kind: Deployment
 metadata:
   name: webapp-deployment
 spec:
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:
-        app: webapp
+        name: webapp
+        environment: dev
     spec:
       containers:
-      - name: nginx
-        image: nginx:1.7.9
+      - name: webapp
+        image: asia.gcr.io/dius-158701/gke-webapp:v1
         ports:
         - containerPort: 80
