@@ -1,7 +1,11 @@
 This repo hosts a tutorial on how to get started withi Google Container Engine (GKE).
 It goes through setting up all the way to blue/green deployments using Kubernetes Deployments instead of the old replication controllers.
 
-# Slides
+# Slides - Quicklink
+
+[Go Talks Slides Link](http://go-talks.appspot.com/github.com/serinth/gke-example-go/slides/main.slide#1)
+
+# Slides - Using Present Tool
 
 Slides are using the [Golang Present tool](https://godoc.org/golang.org/x/tools/present) which can be installed into your GOPATH with:
 
