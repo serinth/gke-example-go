@@ -1,7 +1,7 @@
 This repo hosts a tutorial on how to get started withi Google Container Engine (GKE).
 It goes through setting up all the way to blue/green deployments using Kubernetes Deployments instead of the old replication controllers.
 
-# Slides - Quicklink
+# Slides - Quick Link
 
 [Go Talks Slides Link](http://go-talks.appspot.com/github.com/serinth/gke-example-go/slides/main.slide#1)
 
