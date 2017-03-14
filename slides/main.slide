@@ -322,6 +322,8 @@ Increase the number of replicas in *webapp-deployment.yaml* and then run:
   webapp-deployment-czzbk            1/1       Running   0          10m
   webapp-deployment-hc1b5            1/1       Running   0          9s
 
+: If we want to autoscale we can use kubectl autoscale
+
 * Rolling Updates
 
 Rolling updates are done in a Blue/Green fashion so that there is *no* *downtime*.

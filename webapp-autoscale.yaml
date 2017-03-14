@@ -1,0 +1,15 @@
+# run deployment first like this:
+# kubectl run webapp --image=asia.gcr.io/<project id>/gke-webapp:v1 --requests=cpu=200m --expose --port=80
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: webapp
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    name: webapp-deployment
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
