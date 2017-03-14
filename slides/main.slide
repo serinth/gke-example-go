@@ -12,7 +12,7 @@ ttruong@dius.com.au
 
   gcloud components install kubectl
 
-Sign up for Google Free Trial. It gives $300 for 60 days. Will confirm before actually billing you so your card won't automatically get charged.
+Sign up for Google Free Trial. It gives $300 for 1 year. Will confirm before actually billing you so your card won't automatically get charged.
 
 Setup Kubernetes (K8s) Config:
 
