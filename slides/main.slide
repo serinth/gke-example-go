@@ -207,6 +207,10 @@ Clusters can be made to auto-scale at a later date and also be multi-zone at a l
 
   gcloud container clusters create dius-cluster --zone asia-northeast1-a --num-nodes 2 
 
+If we wanted to autoscale our nodes we can also pass in these arguments:
+
+  --enable-autoscaling --min-nodes=1 --max-nodes=10 --additional-zones=us-central1-a,us-central1-b
+
 This can take a few minutes.
 
 Set Kubernetes configuration credentials with:
@@ -215,6 +219,12 @@ Set Kubernetes configuration credentials with:
 
 This only has to be run once per machine. The credentials are stored into *~/.kube/config*
 
+: gcloud alpha container clusters update mycluster --enable-autoscaling --min-nodes=1 --max-nodes=10 --zone=us-central1-f --node-pool=default-pool
+: To upgrade the cluster, create a new node pool with required permissions and size etc. Then cordon old nodes and drain each one. e.g.
+: kubectl cordon {old_node_name}  # Repeat this command for each old node then;
+: kubectl drain {old_node_name} # then;
+: gcloud container node-pools delete default-pool --cluster=prod-cluster-1
+: automatically scales if it deems it will fit for containers. Containers can be queued if the nodes won't handle it.
 : kubectl can switch clusters and credentials accordingly
 : kubectl proxy --www=. to run the Kubernetes UI
 
