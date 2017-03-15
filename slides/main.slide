@@ -324,7 +324,7 @@ Increase the number of replicas in *webapp-deployment.yaml* and then run:
 
 * Scaling Out - Autoscaling
 
-We can instead just run the container and then specify a *horizontal pod autoscaler*
+We can instead just run the container and then specify a *horizontal* *pod* *autoscaler*
 
 .code ../webapp-autoscale.yaml
 
