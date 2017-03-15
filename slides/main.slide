@@ -61,7 +61,7 @@ Projects are the high level abstraction on GCP. A Project has all the GCP servic
 
 Set the project and get a list of projects with:
   
-  gcloud config set project <PROJECT NAME>
+  gcloud config set project <PROJECT ID>
   gcloud projects list
 
 * The Web Application
@@ -211,7 +211,7 @@ If we wanted to autoscale our nodes we can also pass in these arguments:
 
   --enable-autoscaling --min-nodes=1 --max-nodes=10 --additional-zones=us-central1-a,us-central1-b
 
-This can take a few minutes.
+This ca701n take a few minutes.
 
 Set Kubernetes configuration credentials with:
 
