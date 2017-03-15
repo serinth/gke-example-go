@@ -302,7 +302,7 @@ This make take a few seconds.
 
 .play ../watcher/watcher.go /^func main/,/^}/
 
-* Scaling Out
+* Scaling Out - Deployments
 
 Increase the number of replicas in *webapp-deployment.yaml* and then run:
 
@@ -322,7 +322,13 @@ Increase the number of replicas in *webapp-deployment.yaml* and then run:
   webapp-deployment-czzbk            1/1       Running   0          10m
   webapp-deployment-hc1b5            1/1       Running   0          9s
 
-: If we want to autoscale we can use kubectl autoscale
+* Scaling Out - Autoscaling
+
+We can instead just run the container and then specify a *horizontal pod autoscaler*
+
+.code ../webapp-autoscale.yaml
+
+: We can also use custom metrics but we would need to provide an endpoint to provide those metrics
 
 * Rolling Updates
 
