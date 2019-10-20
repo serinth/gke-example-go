@@ -1,4 +1,4 @@
-This repo hosts a tutorial on how to get started withi Google Container Engine (GKE).
+This repo hosts a tutorial on how to get started with Google Container Engine (GKE).
 It goes through setting up all the way to blue/green deployments using Kubernetes Deployments instead of the old replication controllers.
 
 # Slides - Quick Link
@@ -32,3 +32,6 @@ There are two main Go programs here that can also be executed via the slides.
 The *API* application is meant to be built into a docker container and then pushed to Google Container Registry (GCR)
 
 The *watcher* application is meant for demonstrating Kubernetes' blue/green deployment (see the slides).
+
+# Notes
+This repo uses K8's deployments. The preferred way to manage these now is through a package manager such as [Helm](https://helm.sh/).
